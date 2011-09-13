@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string name="welcome_text">Welcome to TimeTap!</string>
+ <string name="app_name">TimeTap</string>
+ <string name="take_photo">Click to Take Photo</string>
+ <string name="go_to_two">Got to TWO</string>
+ <string name="go_to_one">Click to ONE</string>
+ <string name="username">Username</string>
+ <string name="passwordLabel">Password</string>
+ <string name="login_button_label">Log In</string>
+ <string name="forget_password_text">Forget your password?</string>
+ 
+ <!-- Preference Keys -->
+ <string name="pref_password">password</string>
+ <string name="pref_username">username</string>
+ <string name="company_alias_subdomain_url_hint">Company Alias</string>
+</resources>

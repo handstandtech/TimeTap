@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2010 Mark Wyszomierski -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+ <item>
+  <shape>
+   <padding
+    android:left="0dp"
+    android:top="0dp"
+    android:right="0dp"
+    android:bottom="1dp" />
+   <solid android:color="#FBFBFB" />
+  </shape>
+ </item>
+ <item>
+  <shape>
+   <!--padding
+    android:left="0dp"
+    android:top="0dp"
+    android:right="0dp"
+    android:bottom="0dp" /-->
+   <gradient
+    android:startColor="#119fc3"
+    android:endColor="#0c7da6"
+    android:angle="90" />
+  </shape>
+ </item>
+</layer-list>

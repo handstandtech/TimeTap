@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent" android:id="@+id/RootView"
+	android:background="@drawable/background" android:layout_weight="1.0"
+	android:layout_height="match_parent">
+	<LinearLayout android:layout_width="match_parent"
+		android:layout_height="match_parent" android:id="@+id/linearLayout1"
+		android:orientation="vertical">
+		<include android:id="@+id/cell1" layout="@layout/header" />
+		<LinearLayout android:layout_width="match_parent"
+			android:padding="10dp" android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp" android:id="@+id/summary_wrapper"
+			android:background="@color/white" android:layout_height="wrap_content"
+			android:orientation="vertical" android:layout_marginBottom="10dp">
+			<LinearLayout android:layout_width="match_parent"
+				android:id="@+id/time_and_task_info_wrapper" android:layout_height="wrap_content"
+				android:orientation="horizontal" android:paddingBottom="10dp">
+				<LinearLayout android:layout_width="wrap_content"
+					android:id="@+id/vertical_wrapper" android:layout_height="wrap_content"
+					android:orientation="vertical">
+					<TextView android:text="Titleist Fi Portal"
+						android:layout_height="wrap_content" android:layout_width="match_parent"
+						android:textColor="@color/item_project_text" android:id="@+id/project_name"></TextView>
+					<TextView android:text="Development"
+						android:layout_height="wrap_content" android:layout_width="match_parent"
+						android:textColor="@color/item_task_text" android:id="@+id/task_name"></TextView>
+				</LinearLayout>
+				<TextView android:text="00:00" android:layout_height="wrap_content"
+					android:gravity="right" android:layout_weight="1"
+					android:layout_width="wrap_content" android:textSize="20dp" android:textStyle="bold" android:textColor="#333333"
+					android:paddingRight="5dp" android:id="@+id/hours_text"></TextView>
+			</LinearLayout>
+			<Button android:text="Stop Timer" android:id="@+id/stop_timer_button"
+				android:layout_width="match_parent" android:layout_height="wrap_content"
+				style="@style/red_button"></Button>
+		</LinearLayout>
+		<LinearLayout android:layout_width="match_parent"
+			android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
+			android:id="@+id/task_list" android:background="@color/white"
+			android:layout_height="wrap_content" android:orientation="vertical"
+			android:layout_marginBottom="10dp">
+			<TextView android:text="TASK NOTES" android:layout_height="wrap_content"
+				android:layout_width="match_parent" android:id="@+id/textView1"
+				style="@style/red_sub_header"></TextView>
+			<RelativeLayout android:id="@+id/widget28"
+				android:layout_width="wrap_content" android:layout_height="wrap_content">
+				<EditText android:layout_height="175dp"
+					android:layout_width="match_parent" android:id="@+id/notes_text"
+					android:inputType="textMultiLine" android:hint="Task Notes"
+					android:gravity="top|left">
+				</EditText>
+				<ImageButton android:layout_height="75dp"
+					android:id="@+id/voice_recognition_button" android:src="@android:drawable/ic_btn_speak_now"
+					android:layout_width="75dp" android:layout_alignRight="@+id/notes_text"
+					android:layout_alignBottom="@+id/notes_text"
+					android:layout_marginBottom="10dp" android:layout_marginRight="10dp"></ImageButton>
+			</RelativeLayout>
+			<LinearLayout android:layout_width="match_parent"
+				android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
+				android:paddingTop="10dp" android:paddingBottom="10dp"
+				android:id="@+id/task_list" android:background="@color/white"
+				android:layout_height="wrap_content" android:orientation="vertical"
+				android:layout_marginBottom="10dp" android:gravity="center">
+				<Button android:text="Save" android:layout_width="match_parent" android:layout_height="wrap_content"
+					style="@style/red_button" android:layout_weight="1" android:layout_marginLeft="60dp" android:layout_marginRight="60dp" android:textSize="16dp" android:id="@+id/save_button"></Button>
+			</LinearLayout>
+		</LinearLayout>
+	</LinearLayout>
+</ScrollView>

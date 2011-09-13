@@ -1,0 +1,41 @@
+<!-- Copyright (C) 2007 The Android Open Source Project -->
+<resources>
+ <color name="white">#FFFFFF</color>
+ <color name="red">#FF0000</color>
+ <color name="blue">#0000FF</color>
+ <color name="green">#00FF00</color>
+ <color name="purple_start">#9b256b</color>
+ <color name="purple_end">#5d2761</color>
+ <!-- 427BBA, 0f93b8 -->
+ <color name="blue_start">#0f93b8</color>
+ <color name="blue_end">#0f93b8</color>
+ <color name="lgrey_start">#BFC0C0</color>
+ <color name="lgrey_end">#AEB2B7</color>
+ <color name="dgrey_start">#CCCCCC</color>
+ <color name="dgrey_end">#EFEFEF</color>
+ <color name="item_grey_start">#B4B8BA</color>
+ <color name="item_grey_end">#62707C</color>
+ <color name="black_start">#333333</color>
+ <color name="black_end">#181818</color>
+ <color name="radial_gradient_black_start">#555555</color>
+ <color name="radial_gradient_black_end">#222222</color>
+ <color name="grey_start">#CBCBCB</color>
+ <color name="grey_end">#8C9DAE</color>
+ <color name="blue_badges_mayor">#095b72</color>
+ <color name="vlgrey">#EEEEEE</color>
+ <color name="color_score_list_adapter_highlight">#EEEEEE</color>
+ <color name="color_score_mayor_section_background">#DDDDDD</color>
+ <color name="color_bright_green">#a6da00</color>
+ <color name="tip_detail_actions_background">#c7c7c7</color>
+ <color name="user_details_activity_general">#FF555555</color>
+ <color name="transparent">#00000000</color>
+ <color name="background_grey">#a3a4a6</color>
+ <color name="red_start">#cc0000</color>
+ <color name="red_end">#740000</color>
+ <color name="light_grey_gradient_end">#eeecec</color>
+ 
+ 
+ <color name="item_project_text">#444444</color>
+ <color name="item_task_text">#898989</color>
+ <color name="item_bottom_border">#D6DBDF</color>
+</resources>

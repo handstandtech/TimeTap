@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:background="@drawable/background" android:id="@+id/RootView"
+	android:orientation="vertical" android:layout_gravity="center_vertical|center_horizontal|center"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:gravity="center_vertical">
+	<LinearLayout android:orientation="vertical" android:id="@+id/fieldsColumn"
+		android:layout_width="match_parent" android:paddingRight="25dp"
+		android:paddingLeft="25dp" android:keepScreenOn="true"
+		android:weightSum="1" android:layout_height="fill_parent"
+		android:paddingBottom="20dp">
+		<ImageView android:layout_height="wrap_content" android:src="@drawable/logo"
+			android:id="@+id/imageView1" android:layout_width="match_parent"
+			android:layout_marginTop="30dp" android:layout_marginBottom="10dp"></ImageView>
+		<LinearLayout android:paddingTop="20dp"
+			android:layout_width="match_parent" android:id="@+id/linearLayout1"
+			android:layout_height="wrap_content" android:layout_marginBottom="5dp">
+			<EditText android:layout_weight="1" android:layout_height="wrap_content"
+				android:layout_width="match_parent" android:hint="@string/company_alias_subdomain_url_hint"
+				android:id="@+id/subdomainText">
+				<requestFocus></requestFocus>
+			</EditText>
+			<TextView android:layout_height="match_parent" android:id="@+id/textView2"
+				android:text=".harvestapp.com" android:gravity="bottom"
+				android:paddingBottom="10dp" android:textColor="#FFFFFF"
+				android:layout_width="wrap_content"></TextView>
+		</LinearLayout>
+		<EditText android:id="@+id/usernameText"
+			android:layout_height="wrap_content" android:layout_width="match_parent"
+			android:hint="Email" android:layout_marginBottom="5dp">
+		</EditText>
+		<EditText android:id="@+id/passwordText"
+			android:layout_height="wrap_content" android:layout_width="match_parent"
+			android:hint="Password" android:layout_marginBottom="5dp"
+			android:inputType="textPassword"></EditText>
+		<Button android:layout_gravity="right" android:id="@+id/loginButton"
+			android:layout_height="wrap_content" android:layout_width="match_parent"
+			android:text="@string/login_button_label" style="@style/red_button"
+			android:padding="10dp" android:layout_marginTop="10dp" />
+		<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+			android:layout_height="wrap_content" android:layout_width="match_parent"
+			android:gravity="center" android:id="@+id/forgetPasswordLink"
+			android:text="@string/forget_password_text" android:textColor="@color/vlgrey"
+			android:layout_margin="10dp" android:visibility="gone"></TextView>
+	</LinearLayout>
+</ScrollView>
