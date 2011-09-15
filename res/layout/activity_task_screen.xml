@@ -21,25 +21,26 @@
 					android:orientation="vertical">
 					<TextView android:text="Titleist Fi Portal"
 						android:layout_height="wrap_content" android:layout_width="match_parent"
-						android:textColor="@color/item_project_text" android:id="@+id/project_name"></TextView>
+						android:textColor="@color/item_project_text" android:id="@+id/project_name" android:textSize="16dp" android:textStyle="bold"></TextView>
 					<TextView android:text="Development"
 						android:layout_height="wrap_content" android:layout_width="match_parent"
 						android:textColor="@color/item_task_text" android:id="@+id/task_name"></TextView>
 				</LinearLayout>
-				<TextView android:text="00:00" android:layout_height="wrap_content"
+				<TextView android:layout_height="wrap_content"
 					android:gravity="right" android:layout_weight="1"
-					android:layout_width="wrap_content" android:textSize="20dp" android:textStyle="bold" android:textColor="#333333"
-					android:paddingRight="5dp" android:id="@+id/hours_text"></TextView>
+					android:layout_width="wrap_content" android:textColor="#333333"
+					android:paddingRight="5dp" android:id="@+id/hours_text" android:textSize="24dp" android:text="00:00:00" android:paddingTop="2dp"></TextView>
 			</LinearLayout>
-			<Button android:text="Stop Timer" android:id="@+id/stop_timer_button"
+			<Button android:text="Stop Timer" android:id="@+id/toggle_timer_button"
 				android:layout_width="match_parent" android:layout_height="wrap_content"
 				style="@style/red_button"></Button>
 		</LinearLayout>
 		<LinearLayout android:layout_width="match_parent"
 			android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
-			android:id="@+id/task_list" android:background="@color/white"
+			android:id="@+id/notes_wrapper" android:background="@color/white"
 			android:layout_height="wrap_content" android:orientation="vertical"
-			android:layout_marginBottom="10dp">
+			android:layout_marginBottom="10dp" android:focusable="true"
+			android:focusableInTouchMode="true">
 			<TextView android:text="TASK NOTES" android:layout_height="wrap_content"
 				android:layout_width="match_parent" android:id="@+id/textView1"
 				style="@style/red_sub_header"></TextView>
@@ -58,12 +59,15 @@
 			</RelativeLayout>
 			<LinearLayout android:layout_width="match_parent"
 				android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
-				android:paddingTop="10dp" android:paddingBottom="10dp"
-				android:id="@+id/task_list" android:background="@color/white"
-				android:layout_height="wrap_content" android:orientation="vertical"
-				android:layout_marginBottom="10dp" android:gravity="center">
-				<Button android:text="Save" android:layout_width="match_parent" android:layout_height="wrap_content"
-					style="@style/red_button" android:layout_weight="1" android:layout_marginLeft="60dp" android:layout_marginRight="60dp" android:textSize="16dp" android:id="@+id/save_button"></Button>
+				android:paddingTop="10dp" android:paddingBottom="10dp" android:id="@+id/save_button_wrapper"
+				android:background="@color/white" android:layout_height="wrap_content"
+				android:orientation="vertical" android:layout_marginBottom="10dp"
+				android:gravity="center" android:visibility="gone">
+				<Button android:text="Save" android:layout_width="match_parent"
+					android:layout_height="wrap_content" style="@style/red_button"
+					android:layout_weight="1" android:layout_marginLeft="60dp"
+					android:layout_marginRight="60dp" android:textSize="16dp"
+					android:id="@+id/save_button"></Button>
 			</LinearLayout>
 		</LinearLayout>
 	</LinearLayout>

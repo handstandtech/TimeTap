@@ -35,8 +35,8 @@ public class LoginActivity extends TimeTapBaseActivity {
     initializeLoginButton();
     initializeForgotPasswordLink();
 
-    if (previouslyLoggedIn()) {
-      Intent showHomeIntent = new Intent(this, HomeActivity.class);
+    if (getTimeTap().isPreviouslyLoggedIn(LoginActivity.this)) {
+      Intent showHomeIntent = new Intent(this, ClientListActivity.class);
       startActivity(showHomeIntent);
     }
 
@@ -55,16 +55,6 @@ public class LoginActivity extends TimeTapBaseActivity {
   @Override
   public void onBackPressed() {
     return;
-  }
-
-  private boolean previouslyLoggedIn() {
-    String username = getUsernameFromPrefs();
-    String password = getPasswordFromPrefs();
-    String subdomain = getSubdomainFromPrefs();
-    if (username != null && password != null && subdomain != null) {
-      return true;
-    }
-    return false;
   }
 
   private void initializeLoginButton() {
@@ -96,14 +86,11 @@ public class LoginActivity extends TimeTapBaseActivity {
                   Log.i(Constants.TAG, "Email:" + result.getUser().getEmail());
                   Log.i(Constants.TAG, "Timezone:" + result.getUser().getTimezone());
 
-                  Editor preferences = LoginActivity.this.getSharedPreferences(TAG,
-                      android.content.Context.MODE_PRIVATE).edit();
-                  preferences.putString(Constants.PREF_USERNAME, username);
-                  preferences.putString(Constants.PREF_PASSWORD, password);
-                  preferences.putString(Constants.PREF_SUBDOMAIN, subdomain);
-                  preferences.commit();
+                  LoginActivity.this.setUsernameInPrefs(username);
+                  LoginActivity.this.setPasswordInPrefs(password);
+                  LoginActivity.this.setSubdomainInPrefs(subdomain);
 
-                  Intent showActivityIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                  Intent showActivityIntent = new Intent(LoginActivity.this, ClientListActivity.class);
                   LoginActivity.this.startActivity(showActivityIntent);
                 } else {
                   Toast.makeText(LoginActivity.this, "Invalid Email or Password", Toast.LENGTH_LONG).show();

@@ -2,65 +2,71 @@ package com.handstandtech.timetap.activity;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.view.Window;
 
+import com.handstandtech.harvest.impl.DailyResponse;
 import com.handstandtech.timetap.Constants;
+import com.handstandtech.timetap.Util;
+import com.handstandtech.timetap.application.TimeTapApplication;
 
 public class TimeTapBaseActivity extends Activity {
 
-	protected static final String PROP_USERNAME = "username";
-	protected static final String PROP_PASSWORD = "password";
-	public static final String TAG = "TimeTap";
+  protected static final String PROP_USERNAME = "username";
+  protected static final String PROP_PASSWORD = "password";
+  public static final String TAG = "TimeTap";
 
-	protected static SharedPreferences preferences; // Instantiating editor
-													// object
+  protected static SharedPreferences preferences; // Instantiating editor
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		preferences = getSharedPreferences(TAG,
-				android.content.Context.MODE_PRIVATE);
-	}
+  // object
 
-	@Override
-	public void onAttachedToWindow() {
-		super.onAttachedToWindow();
-		Window window = getWindow();
-		window.setFormat(PixelFormat.RGBA_8888);
-	}
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    preferences = getSharedPreferences(TAG, android.content.Context.MODE_PRIVATE);
+  }
 
-	public String getUsernameFromPrefs() {
-		return preferences.getString(Constants.PREF_USERNAME, null);
-	}
-	
+  @Override
+  public void onAttachedToWindow() {
+    super.onAttachedToWindow();
+    Window window = getWindow();
+    window.setFormat(PixelFormat.RGBA_8888);
+  }
 
-	public String getSubdomainFromPrefs() {
-		return preferences.getString(Constants.PREF_SUBDOMAIN, null);
-	}
+  public String getUsernameFromPrefs() {
+    return preferences.getString(Constants.PREF_USERNAME, null);
+  }
 
-	public String getPasswordFromPrefs() {
-		return preferences.getString(Constants.PREF_PASSWORD, null);
-	}
+  public String getSubdomainFromPrefs() {
+    return preferences.getString(Constants.PREF_SUBDOMAIN, null);
+  }
 
-	// @Override
-	// protected void onDestroy() {
-	// super.onDestroy();
-	//
-	// unbindDrawables(findViewById(R.id.RootView));
-	// System.gc();
-	// }
-	//
-	// private void unbindDrawables(View view) {
-	// if (view.getBackground() != null) {
-	// view.getBackground().setCallback(null);
-	// }
-	// if (view instanceof ViewGroup) {
-	// for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
-	// unbindDrawables(((ViewGroup) view).getChildAt(i));
-	// }
-	// ((ViewGroup) view).removeAllViews();
-	// }
-	// }
+  public String getPasswordFromPrefs() {
+    return preferences.getString(Constants.PREF_PASSWORD, null);
+  }
+
+  protected void setUsernameInPrefs(String username) {
+    Editor editor = preferences.edit();
+    editor.putString(Constants.PREF_USERNAME, username);
+    editor.commit();
+  }
+
+  protected void setPasswordInPrefs(String password) {
+    Editor editor = preferences.edit();
+    editor.putString(Constants.PREF_PASSWORD, password);
+    editor.commit();
+  }
+
+  protected void setSubdomainInPrefs(String subdomain) {
+    Editor editor = preferences.edit();
+    editor.putString(Constants.PREF_SUBDOMAIN, subdomain);
+    editor.commit();
+  }
+
+  public TimeTapApplication getTimeTap() {
+    return (TimeTapApplication) getApplication();
+  }
+
 }

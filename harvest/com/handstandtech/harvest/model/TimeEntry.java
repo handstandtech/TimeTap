@@ -41,11 +41,11 @@ public class TimeEntry implements Serializable {
   /**
    * : 2011-09-07T21:15:13Z,
    */
-  // private Date created_at;
+  private Date created_at;
   /**
    * 2011-09-07T21:15:13Z,
    */
-  // private Date updated_at;
+  private Date updated_at;
 
   /**
    * : 7.25}
@@ -118,6 +118,22 @@ public class TimeEntry implements Serializable {
 
   public void setHours(Double hours) {
     this.hours = hours;
+  }
+
+  public Date getCreated_at() {
+    return created_at;
+  }
+
+  public void setCreated_at(Date created_at) {
+    this.created_at = created_at;
+  }
+
+  public Date getUpdated_at() {
+    return updated_at;
+  }
+
+  public void setUpdated_at(Date updated_at) {
+    this.updated_at = updated_at;
   }
 
 }

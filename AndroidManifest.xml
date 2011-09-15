@@ -3,16 +3,11 @@
 	package="com.handstandtech.timetap" android:versionCode="1"
 	android:versionName="1.0">
 	<uses-sdk android:minSdkVersion="8" />
-	<uses-permission android:name="android.permission.VIBRATE" />
-	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.RECEIVE_SMS" />
 	<uses-permission android:name="android.permission.NFC" />
-	<!--uses-feature android:name="android.hardware.camera.autofocus" android:required="false" 
-		/ -->
 	<application android:icon="@drawable/icon" android:label="@string/app_name"
-		android:debuggable="true">
+		android:debuggable="true" android:name=".application.TimeTapApplication">
 		<activity android:name=".activity.LoginActivity"
 			android:theme="@android:style/Theme.Light.NoTitleBar"
 			android:configChanges="orientation|keyboardHidden|keyboard">
@@ -21,19 +16,43 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".activity.HomeActivity"
+		<activity android:name=".activity.ClientListActivity"
 			android:theme="@android:style/Theme.Light.NoTitleBar"
 			android:configChanges="orientation|keyboardHidden|keyboard">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-			</intent-filter>
+		</activity>
+		<activity android:name=".activity.ProjectListActivity"
+			android:theme="@android:style/Theme.Light.NoTitleBar"
+			android:configChanges="orientation|keyboardHidden|keyboard">
+		</activity>
+		<activity android:name=".activity.TaskListActivity"
+			android:theme="@android:style/Theme.Light.NoTitleBar"
+			android:configChanges="orientation|keyboardHidden|keyboard">
 		</activity>
 		<activity android:name=".activity.TaskScreenActivity"
 			android:theme="@android:style/Theme.Light.NoTitleBar"
 			android:configChanges="orientation|keyboardHidden|keyboard">
+		</activity>
+
+		<activity android:name=".activity.TagHandlerActivity"
+			android:theme="@android:style/Theme.Light.NoTitleBar"
+			android:configChanges="keyboardHidden|orientation|keyboard"
+			android:noHistory="true">
 			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
+				<action android:name="android.nfc.action.NDEF_DISCOVERED" />
+				<data android:scheme="http" android:host="handstandtech.com"
+					android:pathPrefix="/timetap" />
+				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
+		</activity>
+		<activity android:name=".activity.TagWriterActivity"
+			android:theme="@android:style/Theme.Light.NoTitleBar"
+			android:configChanges="keyboardHidden|orientation|keyboard">
+			<intent-filter>
+				<action android:name="android.nfc.action.TAG_DISCOVERED" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+			<!--intent-filter> <action android:name="android.intent.action.MAIN" /> 
+				<category android:name="android.intent.category.LAUNCHER" /> </intent-filter -->
 		</activity>
 	</application>
 </manifest>

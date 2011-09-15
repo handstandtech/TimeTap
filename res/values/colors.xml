@@ -11,8 +11,8 @@
  <color name="blue_end">#0f93b8</color>
  <color name="lgrey_start">#BFC0C0</color>
  <color name="lgrey_end">#AEB2B7</color>
- <color name="dgrey_start">#CCCCCC</color>
- <color name="dgrey_end">#EFEFEF</color>
+ <color name="dgrey_start">#666666</color>
+ <color name="dgrey_end">#CCCCCC</color>
  <color name="item_grey_start">#B4B8BA</color>
  <color name="item_grey_end">#62707C</color>
  <color name="black_start">#333333</color>

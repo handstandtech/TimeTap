@@ -23,7 +23,7 @@ public class FileCacheUtil {
 				boolean successful = bitmap.compress(
 						Bitmap.CompressFormat.JPEG, 100, outputStream);
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			}
 		} else {
@@ -46,7 +46,7 @@ public class FileCacheUtil {
 				bitmap = BitmapFactory.decodeStream(new FileInputStream(file));
 			}
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		return bitmap;

@@ -7,7 +7,6 @@ public class WhoAmIResponse {
 	private User user;
 
 	public WhoAmIResponse() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public User getUser() {

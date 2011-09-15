@@ -1,46 +1,52 @@
 package com.handstandtech.timetap.activity;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.RecognizerIntent;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.handstandtech.harvest.model.TimerResponse;
 import com.handstandtech.timetap.Constants;
 import com.handstandtech.timetap.R;
-import com.handstandtech.timetap.Util;
 import com.handstandtech.timetap.task.AsyncTaskCallback;
 import com.handstandtech.timetap.task.StartTimerTask;
+import com.handstandtech.timetap.task.ToggleTimerTask;
 import com.handstandtech.timetap.task.UpdateTimerTask;
 
 public class TaskScreenActivity extends TimeTapBaseActivity {
-  protected static final String PROP_IMAGE = "image";
   private static final int VOICE_RECOGNITION_REQUEST_CODE = 0;
+  protected static final String RESUME_TIMER_TEXT = "Resume Timer";
+  private static final String STOP_TIMER_TEXT = "Stop Timer";
 
-  private Long projectId;
-
-  private Handler mHandler = new Handler();
-
-  private Long taskId;
-  private Long mStartTime;
-  private TimerResponse currTimer;
+  private Handler runningTimerDisplayHandler = new Handler();
 
   public TaskScreenActivity() {
     super();
@@ -52,12 +58,13 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
     setContentView(R.layout.activity_task_screen);
 
     Bundle bundle = getIntent().getExtras();
-    this.projectId = bundle.getLong(Constants.PROP_PROJECT);
-    this.taskId = bundle.getLong(Constants.PROP_TASK);
+    Long projectId = bundle.getLong(Constants.PROP_PROJECT_ID);
+    Long taskId = bundle.getLong(Constants.PROP_TASK_ID);
 
-    addStopTimerButtonListener();
+    getToggleTimerButton().setOnClickListener(stopTimerListener);
     addVoiceRecognitionButtonListener();
     addSaveClickHandler();
+    addTextFocusHandler();
 
     getProjectNameText().setText("");
     getTaskNameText().setText("");
@@ -66,58 +73,171 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
     final ProgressDialog dialog = new ProgressDialog(this);
     dialog.setMessage("Starting Timer");
     dialog.setIndeterminate(true);
-    dialog.setCancelable(false);
+    dialog.setCancelable(true);
     dialog.show();
 
-    // TODO do not reload this after cached
+    final Date now = new Date();
+
+    // TODO do not start timer again if started
     Log.i(TAG, "Adding new time entry!");
-    StartTimerTask timerTask = new StartTimerTask(TaskScreenActivity.this, "Started from TimeTap.", "", projectId,
-        taskId, new AsyncTaskCallback<TimerResponse>() {
+    StartTimerTask timerTask = new StartTimerTask(TaskScreenActivity.this, "", "", projectId, taskId,
+        new AsyncTaskCallback<TimerResponse>() {
 
           public void onTaskComplete(final TimerResponse timerResponse) {
-            // Handler Error?
-
-            Toast.makeText(TaskScreenActivity.this, "Timer Started!\n\n" + Util.getGson().toJson(timerResponse),
-                Toast.LENGTH_LONG).show();
-            TaskScreenActivity.this.currTimer = timerResponse;
-            getProjectNameText().setText(timerResponse.getProject());
-            getTaskNameText().setText(timerResponse.getTask());
-            // getHoursText().setText(timerResponse.getHours().toString());
-
-            TaskScreenActivity.this.currTimer = timerResponse;
             if (dialog.isShowing()) {
               dialog.dismiss();
             }
-            mStartTime = timerResponse.getCreated_at().getTime();
-            mHandler.removeCallbacks(mUpdateTimeTask);
-            mHandler.postDelayed(mUpdateTimeTask, TimeConstants.ONE_SECOND);
+
+            // Handle a NULL Result
+            if (timerResponse == null) {
+              Toast.makeText(TaskScreenActivity.this, "ERROR: You do not have access to this project/task!",
+                  Toast.LENGTH_LONG).show();
+              Intent loginIntent = new Intent(TaskScreenActivity.this, ClientListActivity.class);
+              startActivity(loginIntent);
+            } else {
+              TaskScreenActivity.this.getTimeTap().setCurrTimer(timerResponse);
+
+              Toast.makeText(TaskScreenActivity.this, "Timer Started!", Toast.LENGTH_SHORT).show();
+              getProjectNameText().setText(timerResponse.getProject());
+              getTaskNameText().setText(timerResponse.getTask());
+
+              TaskScreenActivity.this.getTimeTap().setLocalStartTime(now.getTime());
+              runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
+              runningTimerDisplayHandler.post(mUpdateTimeTask);
+            }
           }
         });
     timerTask.execute(null);
 
   }
 
+  private void addTextFocusHandler() {
+    EditText editText = getNotesEditText();
+    editText.addTextChangedListener(new TextWatcher() {
+
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+      }
+
+      public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+      }
+
+      public void afterTextChanged(Editable s) {
+        // Make Save Button Wrapper Visible
+        getSaveButtonWrapper().setVisibility(View.VISIBLE);
+      }
+    });
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.drawable.write_task_tag_menu, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    int id = item.getItemId();
+    switch (id) {
+    case R.id.menu_write_task_tag:
+      try {
+        TimerResponse currTimer = getTimeTap().getCurrTimer();
+        String uri = "http://handstandtech.com/timetap?project=" + currTimer.getProject_id() + "&task="
+            + currTimer.getTask_id();
+
+        // Start intent to write tag
+        Intent newIntent = new Intent(TaskScreenActivity.this, TagWriterActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(Constants.PROP_URI, uri);
+        newIntent.putExtras(bundle);
+        startActivityForResult(newIntent, 0);
+
+        // Toast.makeText(TaskScreenActivity.this, "TODO: Set tag to " + uri,
+        // Toast.LENGTH_SHORT).show();
+      } catch (Exception e) {
+        Log.d(TAG, "Error writing tag", e);
+        Toast.makeText(TaskScreenActivity.this, "Error writing tag.", Toast.LENGTH_SHORT).show();
+      }
+      return true;
+    default:
+      return super.onOptionsItemSelected(item);
+    }
+  }
+
+  // // TODO: run on new thread.
+  // private void writeNfcTag(NdefMessage ndefMessage) throws Exception {
+  // Tag nfcTag = new
+  // Tag();TaskScreenActivity.this.getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+  // Log.d(TAG, "have nfc tag " + nfcTag);
+  // Log.d(TAG, "tech list:");
+  // for (String techStr : nfcTag.getTechList()) {
+  // if ("android.nfc.tech.Ndef".equals(techStr)) {
+  // Ndef tech = Ndef.get(nfcTag);
+  // tech.connect();
+  // tech.writeNdefMessage(ndefMessage);
+  // tech.close();
+  // return;
+  // }
+  // }
+  //
+  // NdefFormatable ndefFormatable = NdefFormatable.get(nfcTag);
+  // ndefFormatable.connect();
+  // ndefFormatable.format(ndefMessage);
+  // ndefFormatable.close();
+  // }
+  //
+  // private NdefMessage ndefForUri(String uri) {
+  // byte[] payload = uri.toString().getBytes();
+  // byte[] id;
+  // if (payload.length > 255) {
+  // id = Arrays.copyOfRange(payload, 0, 255);
+  // } else {
+  // id = payload;
+  // }
+  // NdefRecord[] records = new NdefRecord[1];
+  // records[0] = new NdefRecord(NdefRecord.TNF_ABSOLUTE_URI,
+  // NdefRecord.RTD_URI, id, payload);
+  // NdefMessage message = new NdefMessage(records);
+  // return message;
+  // }
+
   private void addSaveClickHandler() {
-    // TODO Auto-generated method stub
-    Button saveButton = (Button) findViewById(R.id.save_button);
+    final TimeTapBaseActivity context = TaskScreenActivity.this;
+    Button saveButton = getSaveButton();
     // Register the onClick listener with the implementation above
     saveButton.setOnClickListener(new OnClickListener() {
 
       public void onClick(View v) {
-        final ProgressDialog dialog = new ProgressDialog(TaskScreenActivity.this);
+        final ProgressDialog dialog = new ProgressDialog(context);
         dialog.setMessage("Updating Timer");
         dialog.setIndeterminate(true);
         dialog.setCancelable(false);
         dialog.show();
 
-        UpdateTimerTask updateTimer = new UpdateTimerTask(TaskScreenActivity.this, currTimer.getId(), currTimer
-            .getProject_id(), currTimer.getTask_id(), getElapsedHoursDecimal(), getNotes(),
-            new AsyncTaskCallback<TimerResponse>() {
+        // Hide Soft Keyboard
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getNotesEditText().getWindowToken(), 0);
+
+        // Make Save Button Wrapper "Gone"
+        getSaveButtonWrapper().setVisibility(View.GONE);
+
+        TimerResponse currTimer = context.getTimeTap().getCurrTimer();
+        Long localStartTime = context.getTimeTap().getLocalStartTime();
+        String notes = getNotesEditText().getText().toString();
+
+        Double elapsedHours = currTimer.getHours();
+        if (localStartTime != null) {
+          elapsedHours = getElapsedHoursDecimal();
+        }
+
+        UpdateTimerTask updateTimer = new UpdateTimerTask(context, currTimer.getId(), currTimer.getProject_id(),
+            currTimer.getTask_id(), elapsedHours, notes, new AsyncTaskCallback<TimerResponse>() {
 
               public void onTaskComplete(TimerResponse result) {
-                // TODO Auto-generated method stub
-                TaskScreenActivity.this.currTimer = result;
-                Toast.makeText(TaskScreenActivity.this, "Timer Updated", Toast.LENGTH_SHORT).show();
+                context.getTimeTap().setCurrTimer(result);
+                Toast.makeText(context, "Timer Updated!", Toast.LENGTH_SHORT).show();
                 if (dialog.isShowing()) {
                   dialog.dismiss();
                 }
@@ -125,50 +245,79 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
             });
         updateTimer.execute(null);
       }
-
     });
   }
 
   protected Double getElapsedHoursDecimal() {
-    final Date now = new Date();
-    long millisecondsPassed = (now.getTime() - mStartTime);
-    return millisecondsPassed / new Double(TimeConstants.ONE_HOUR).doubleValue();
+    Long localStartTime = getTimeTap().getLocalStartTime();
+    if (localStartTime != null) {
+      final Date now = new Date();
+      long millisecondsPassed = (now.getTime() - localStartTime);
+      return millisecondsPassed / new Double(TimeConstants.ONE_HOUR).doubleValue();
+    } else {
+      return null;
+    }
   }
 
   private Runnable mUpdateTimeTask = new Runnable() {
     public void run() {
-      final Date now = new Date();
-      long millisecondsPassed = (now.getTime() - mStartTime);
-      // Log.d(TAG, "Millis: " + millis);
-      long totalTime = millisecondsPassed / TimeConstants.ONE_SECOND;
 
-      long hours = millisecondsPassed / (TimeConstants.ONE_SECOND * 60 * 60);
-      // Log.d(TAG, "Seconds: " + secondsTotal);
-      long minutes = totalTime / 60;
-      // Log.d(TAG, "Minutes: " + minutes);
-      long seconds = totalTime % 60;
-      // Log.i(TAG, "NOW: " + now);
-      // Log.d(TAG, minutes + ":" + totalTime);
-
-      String hoursString = getString(hours);
-      String minutesString = getString(minutes);
-      String secondsString = getString(seconds);
-      getHoursText().setText(hoursString + ":" + minutesString + ":" + secondsString);
-
-      mHandler.postDelayed(this, TimeConstants.ONE_SECOND);
+      DecimalFormat df = new DecimalFormat("#.##");
+      Double elapsedHoursDecimal = getElapsedHoursDecimal();
+      if (elapsedHoursDecimal != null) {
+        String decimalString = df.format(elapsedHoursDecimal);
+        if (decimalString.equals("0")) {
+          getHoursText().setText("0.00");
+        } else {
+          getHoursText().setText(decimalString);
+        }
+        runningTimerDisplayHandler.postDelayed(this, TimeConstants.ONE_SECOND);
+      } else {
+        runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
+        TaskScreenActivity.this.finish();
+      }
     }
   };
+
+  // /**
+  // * Print time to 00:00:00 format
+  // */
+  // private String clockFormat(Long start) {
+  // final Long now = new Date().getTime();
+  // long millisecondsPassed = (now - start);
+  // Log.d(TAG, "Now: " + new Date(now));
+  // Log.d(TAG, "Start: " + new Date(start));
+  // long totalTime = millisecondsPassed / TimeConstants.ONE_SECOND;
+  // long hours = millisecondsPassed / (TimeConstants.ONE_SECOND * 60 * 60);
+  // long minutes = totalTime / 60;
+  // long seconds = totalTime % 60;
+  // String hoursString = getString(hours);
+  // String minutesString = getString(minutes);
+  // String secondsString = getString(seconds);
+  // return hoursString + ":" + minutesString + ":" + secondsString;
+  // }
+  // protected String getString(Long n) {
+  // if (n < 10) {
+  // return "0" + n;
+  // } else {
+  // return n.toString();
+  // }
+  // }
 
   private TextView getProjectNameText() {
     return (TextView) findViewById(R.id.project_name);
   }
 
-  protected String getString(Long n) {
-    if (n < 10) {
-      return "0" + n;
-    } else {
-      return n.toString();
-    }
+  private LinearLayout getSaveButtonWrapper() {
+    return (LinearLayout) findViewById(R.id.save_button_wrapper);
+  }
+
+  private Button getSaveButton() {
+    return (Button) findViewById(R.id.save_button);
+  }
+
+  private Button getToggleTimerButton() {
+    return (Button) findViewById(R.id.toggle_timer_button);
   }
 
   private TextView getHoursText() {
@@ -179,9 +328,8 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
     return (TextView) findViewById(R.id.task_name);
   }
 
-  private String getNotes() {
-    EditText notesText = (EditText) findViewById(R.id.notes_text);
-    return notesText.getText().toString();
+  private EditText getNotesEditText() {
+    return (EditText) findViewById(R.id.notes_text);
   }
 
   private void addVoiceRecognitionButtonListener() {
@@ -191,87 +339,90 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
     voiceButton.setOnClickListener(new OnClickListener() {
 
       public void onClick(View v) {
-        startVoiceRecognitionActivity();
+        // Fire an intent to start the speech recognition activity.
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Record Task Notes");
+        startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
       }
 
     });
   }
 
-  private void addStopTimerButtonListener() {
+  private OnClickListener stopTimerListener = new OnClickListener() {
+    public void onClick(View v) {
+      final TimeTapBaseActivity context = TaskScreenActivity.this;
+      final ProgressDialog dialog = new ProgressDialog(context);
+      dialog.setMessage("Stopping Timer");
+      dialog.setIndeterminate(true);
+      dialog.setCancelable(true);
+      dialog.show();
+      final TimerResponse currTimer = TaskScreenActivity.this.getTimeTap().getCurrTimer();
+      ToggleTimerTask toggleTimerTask = new ToggleTimerTask(context, currTimer.getId(),
+          new AsyncTaskCallback<TimerResponse>() {
 
-    // Capture our button from layout
-    Button stopTimerButton = (Button) findViewById(R.id.stop_timer_button);
-    // Register the onClick listener with the implementation above
-    stopTimerButton.setOnClickListener(new OnClickListener() {
+            public void onTaskComplete(TimerResponse result) {
+              if (dialog.isShowing()) {
+                dialog.dismiss();
+              }
 
-      public void onClick(View v) {
-        Toast.makeText(TaskScreenActivity.this, "Stop Timer Here!!!", Toast.LENGTH_SHORT).show();
+              // Stop the Timer Display
+              runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
 
-        Intent showActivityIntent = new Intent(TaskScreenActivity.this, HomeActivity.class);
-        TaskScreenActivity.this.startActivity(showActivityIntent);
-      }
+              Button toggleTimerButton = getToggleTimerButton();
+              toggleTimerButton.setText(RESUME_TIMER_TEXT);
 
-    });
-  }
+              getToggleTimerButton().setOnClickListener(resumeTimerListener);
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.drawable.menu, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    int id = item.getItemId();
-    switch (id) {
-    case R.id.menu_info:
-      // Info
-      Toast toast = Toast.makeText(this, "Created by Handstand Technologies", Toast.LENGTH_LONG);
-      toast.setGravity(Gravity.CENTER, 0, 0);
-      toast.show();
-      return true;
-    case R.id.menu_logout:
-      // Logout
-      Log.i(TAG, "Logging out current user.");
-      Editor preferencesEditor = preferences.edit();
-      preferencesEditor.putString(Constants.PREF_USERNAME, null);
-      preferencesEditor.putString(Constants.PREF_PASSWORD, null);
-      preferencesEditor.putString(Constants.PREF_SUBDOMAIN, null);
-      preferencesEditor.commit();
-      Intent loginIntent = new Intent(this, LoginActivity.class);
-      startActivity(loginIntent);
-      return true;
-    case R.id.menu_refresh:
-      // Refresh
-      startActivity(getIntent());
-      finish();
-      return true;
-
-    default:
-      return super.onOptionsItemSelected(item);
+              // Update currentTimer
+              context.getTimeTap().setCurrTimer(result);
+              context.getTimeTap().setLocalStartTime(null);
+            }
+          });
+      toggleTimerTask.execute(null);
     }
-  }
+  };
 
-  @Override
-  public void onRestoreInstanceState(Bundle savedInstanceState) {
-    super.onRestoreInstanceState(savedInstanceState);
-  }
+  private OnClickListener resumeTimerListener = new OnClickListener() {
+    public void onClick(View v) {
+      final ProgressDialog dialog = new ProgressDialog(TaskScreenActivity.this);
+      dialog.setMessage("Resuming Timer");
+      dialog.setIndeterminate(true);
+      dialog.setCancelable(true);
+      dialog.show();
 
-  @Override
-  public void onSaveInstanceState(Bundle savedInstanceState) {
-    super.onSaveInstanceState(savedInstanceState);
-  }
+      final TimerResponse currTimer = TaskScreenActivity.this.getTimeTap().getCurrTimer();
+      ToggleTimerTask toggleTimerTask = new ToggleTimerTask(TaskScreenActivity.this, currTimer.getId(),
+          new AsyncTaskCallback<TimerResponse>() {
 
-  /**
-   * Fire an intent to start the speech recognition activity.
-   */
-  private void startVoiceRecognitionActivity() {
-    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Record Task Notes");
-    startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
-  }
+            public void onTaskComplete(TimerResponse result) {
+              if (dialog.isShowing()) {
+                dialog.dismiss();
+              }
+
+              if (result == null) {
+                Toast.makeText(TaskScreenActivity.this, "An Error Occurred", Toast.LENGTH_LONG);
+              } else {
+                // Update currentTimer
+                TaskScreenActivity.this.getTimeTap().setCurrTimer(result);
+
+                // Restart the Timer Display
+                runningTimerDisplayHandler.post(mUpdateTimeTask);
+                Double hours = result.getHours();
+                Long timePassed = (long) (hours * TimeConstants.ONE_HOUR);
+                Long nowTime = new Date().getTime();
+                TaskScreenActivity.this.getTimeTap().setLocalStartTime(nowTime - timePassed);
+                Button toggleTimerButton = getToggleTimerButton();
+                toggleTimerButton.setText(STOP_TIMER_TEXT);
+
+                getToggleTimerButton().setOnClickListener(stopTimerListener);
+              }
+
+            }
+          });
+      toggleTimerTask.execute(null);
+    }
+  };
 
   /**
    * Handle the results from the recognition activity.
@@ -282,9 +433,6 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
       // Fill the list view with the strings the recognizer thought it could
       // have heard
       ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-      // mList.setAdapter(new ArrayAdapter<String>(this,
-      // android.R.layout.simple_list_item_1,
-      // matches));
       Toast.makeText(TaskScreenActivity.this, matches.toString(), Toast.LENGTH_LONG);
 
       if (matches != null && matches.size() > 0) {

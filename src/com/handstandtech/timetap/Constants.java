@@ -10,6 +10,7 @@ public class Constants {
   public static final String PROP_CODE = "code";
   public static final String PROP_MESSAGE = "message";
   public static final int RESPONSE_OK = 200;
+  public static final String PREF_DAILY_RESPONSE = "daily_response";
   public static final String PREF_USERNAME = "username";
   public static final String PREF_PASSWORD = "password";
   public static final String PREF_SUBDOMAIN = "subdomain";
@@ -27,6 +28,19 @@ public class Constants {
   public static final String TAG = "TimeTap";
   public static final String APPLICATION_JSON = "application/json";
 
-  public static final String PROP_PROJECT = "project";
-  public static final String PROP_TASK = "task";
+  public static final String PROP_PROJECT_ID = "project_id";
+  public static final String PROP_TASK_ID = "task_id";
+
+  public static final String PROP_PROJECT_NAME = "project_name";
+
+  public static final String PROP_FORCE_RELOAD = "force_reload";
+
+  public static final String PREF_CURR_TIMER = "curr_timer";
+
+  public static final String PREF_LOCAL_START_TIME = "local_start_time";
+
+  public static final String PROP_URI = "uri";
+
+  public static String PROP_CLIENT_NAME = "client_name";
+
 }

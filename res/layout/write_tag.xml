@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent" android:layout_height="match_parent"
+	android:id="@+id/linearLayout2" android:orientation="vertical"
+	android:background="@drawable/background">
+
+	<include android:id="@+id/cell1" layout="@layout/header" />
+	<TextView android:text="Write Task to a NFC Tag"
+		android:layout_height="wrap_content" android:layout_width="match_parent"
+		android:id="@+id/textView1" style="@style/red_sub_header"
+		android:layout_marginLeft="10dp" android:layout_marginRight="10dp"></TextView>
+	<LinearLayout android:layout_width="match_parent"
+		android:padding="10dp" android:layout_marginLeft="10dp"
+		android:layout_marginRight="10dp" android:id="@+id/summary_wrapper"
+		android:background="@color/white" android:layout_height="wrap_content"
+		android:orientation="vertical" android:layout_marginBottom="10dp">
+		<LinearLayout android:layout_width="match_parent"
+			android:paddingLeft="10dp" android:paddingRight="10dp" android:id="@+id/task_list"
+			android:layout_height="wrap_content" android:orientation="vertical">
+			<TextView android:text="Client Name" android:layout_height="wrap_content"
+				android:layout_width="match_parent" android:textColor="@color/item_project_text"
+				android:id="@+id/client_name" android:textSize="16dp"
+				android:textStyle="bold"></TextView>
+			<TextView android:text="Project Name" android:layout_height="wrap_content"
+				android:layout_width="match_parent" android:textColor="@color/item_task_text"
+				android:id="@+id/project_name"></TextView>
+			<TextView android:text="Task Name" android:layout_height="wrap_content"
+				android:layout_width="match_parent" android:textColor="@color/item_task_text"
+				android:id="@+id/task_name"></TextView>
+
+			<Button android:text="Ready to Write" android:id="@+id/writeTagBtn"
+				android:layout_width="match_parent" android:layout_height="wrap_content"
+				style="@style/red_button" android:layout_marginTop="10dp"></Button>
+		</LinearLayout>
+	</LinearLayout>
+
+</LinearLayout>

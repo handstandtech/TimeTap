@@ -23,7 +23,7 @@ public class SerializationUtil {
 			bos.close();
 			return yourBytes;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		return null;
@@ -40,13 +40,13 @@ public class SerializationUtil {
 			in.close();
 			return o;
 		} catch (StreamCorruptedException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		return null;

@@ -38,7 +38,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.handstandtech.harvest.impl.DailyResponse;
 import com.handstandtech.harvest.model.TimerResponse;
 import com.handstandtech.timetap.activity.TimeTapBaseActivity;
 
@@ -64,7 +63,7 @@ public class Util {
       try {
         date = sdf.parse(dateStr);
       } catch (ParseException e) {
-        // TODO Auto-generated catch block
+
         e.printStackTrace();
       }
       return date;
@@ -86,53 +85,9 @@ public class Util {
     return cursor.getString(column_index);
   }
 
-  public static TimerResponse addNewTimeEntry(String notes, String hours, Long project_id, Long task_id,
-      TimeTapBaseActivity context) {
-    String username = context.getUsernameFromPrefs();
-    String password = context.getPasswordFromPrefs();
-    String subdomain = context.getSubdomainFromPrefs();
-    SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy");
-    JSONObject requestJSON = new JSONObject();
-    try {
-      requestJSON.put("notes", notes);
-      requestJSON.put("hours", hours);
-      requestJSON.put("project_id", project_id);
-      requestJSON.put("task_id", task_id);
-      requestJSON.put("spent_at", sdf.format(new Date()));
-    } catch (JSONException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-
-    // AndroidHttpClient httpclient =
-    // AndroidHttpClient.newInstance(Constants.ANDROID_HTTPCLIENT);
-    DefaultHttpClient httpclient = new DefaultHttpClient();
-    String url = getHarvestBase(subdomain) + "/daily/add";
-    HttpPost requestBase = new HttpPost(url);
-    addBasicAuth(requestBase, username, password);
-    addHarvestHeaders(requestBase);
-
-    try {
-      Log.i(TAG, requestJSON.toString());
-      requestBase.setEntity(new StringEntity(requestJSON.toString()));
-      HttpResponse httpResponse = httpclient.execute(requestBase);
-      String content = getContentFromHttpResponse(httpResponse);
-      Log.i(TAG, "Response: " + content);
-      TimerResponse timerResponse = getGson().fromJson(content, TimerResponse.class);
-      return timerResponse;
-    } catch (ClientProtocolException e) {
-      Log.e(TAG, e.getMessage(), e);
-    } catch (IOException e) {
-      Log.e(TAG, e.getMessage(), e);
-    }
-    return null;
-  }
-
   public static void addBasicAuth(HttpRequestBase requestBase, String username, String password) {
-
-    requestBase
-        .addHeader(BasicScheme.authenticate(new UsernamePasswordCredentials(username, password), "UTF-8", false));
-    // return requestBase;
+    requestBase.addHeader(BasicScheme.authenticate(new UsernamePasswordCredentials(username, password),
+        Constants.UTF_8, false));
   }
 
   public static void addHarvestHeaders(HttpRequestBase requestBase) {
@@ -182,47 +137,14 @@ public class Util {
     try {
       return URLEncoder.encode(origSrc, Constants.UTF_8);
     } catch (UnsupportedEncodingException e) {
-      // TODO Auto-generated catch block
+
       e.printStackTrace();
     }
     return null;
   }
 
-  public static DailyResponse getProjects(TimeTapBaseActivity context) {
-    String username = context.getUsernameFromPrefs();
-    String password = context.getPasswordFromPrefs();
-    String subdomain = context.getSubdomainFromPrefs();
-
-    // AndroidHttpClient httpclient =
-    // AndroidHttpClient.newInstance(Constants.ANDROID_HTTPCLIENT);
-    HttpClient httpclient = new DefaultHttpClient();
-    String url = getHarvestBase(subdomain) + "/daily/250/2011";
-    HttpRequestBase requestBase = new HttpGet(url);
-    addHarvestHeaders(requestBase);
-    addBasicAuth(requestBase, username, password);
-    try {
-      HttpResponse httpResponse = httpclient.execute(requestBase);
-      String content = getContentFromHttpResponse(httpResponse);
-
-      DailyResponse dailyResponse = new Gson().fromJson(content, DailyResponse.class);
-      return dailyResponse;
-    } catch (Exception e) {
-      requestBase.abort();
-      Log.e(TAG, e.getMessage(), e);
-    } finally {
-      if (httpclient != null) {
-        // For AndroidHttpClient
-        // httpclient.close();
-      }
-    }
-    return null;
-  }
-
-  public static String getHarvestBase(String harvestid) {
-    return String.format("https://%s.harvestapp.com", harvestid);
-  }
-
-  public static TimerResponse updateTimer(TimeTapBaseActivity context, Long timer_id, Long project_id, Long task_id, Double elapsedHoursDecimal, String notes) {
+  public static TimerResponse updateTimer(TimeTapBaseActivity context, Long timer_id, Long project_id, Long task_id,
+      Double elapsedHoursDecimal, String notes) {
     String username = context.getUsernameFromPrefs();
     String password = context.getPasswordFromPrefs();
     String subdomain = context.getSubdomainFromPrefs();
@@ -233,14 +155,14 @@ public class Util {
       requestJSON.put("project_id", project_id);
       requestJSON.put("task_id", task_id);
     } catch (JSONException e) {
-      // TODO Auto-generated catch block
+
       e.printStackTrace();
     }
 
     // AndroidHttpClient httpclient =
     // AndroidHttpClient.newInstance(Constants.ANDROID_HTTPCLIENT);
     DefaultHttpClient httpclient = new DefaultHttpClient();
-    String url = getHarvestBase(subdomain) + "/daily/update/"+timer_id;
+    String url = getHarvestBase(context) + "/daily/update/" + timer_id;
     HttpPost requestBase = new HttpPost(url);
     addBasicAuth(requestBase, username, password);
     addHarvestHeaders(requestBase);
@@ -259,6 +181,20 @@ public class Util {
       Log.e(TAG, e.getMessage(), e);
     }
     return null;
+  }
+
+  public static void addBasicAuthAndHarvestHeaders(TimeTapBaseActivity context, HttpRequestBase requestBase) {
+    addHarvestHeaders(requestBase);
+    addBasicAuth(requestBase, context.getUsernameFromPrefs(), context.getPasswordFromPrefs());
+  }
+
+  public static String getHarvestBase(TimeTapBaseActivity context) {
+    String subdomain = context.getSubdomainFromPrefs();
+    return getHarvestBase(subdomain);
+  }
+
+  public static String getHarvestBase(String subdomain) {
+    return String.format("https://%s.harvestapp.com", subdomain);
   }
 
 }
