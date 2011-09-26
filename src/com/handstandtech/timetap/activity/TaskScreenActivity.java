@@ -2,18 +2,14 @@ package com.handstandtech.timetap.activity;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-import android.nfc.NfcAdapter;
-import android.nfc.Tag;
-import android.nfc.tech.Ndef;
-import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.RecognizerIntent;
@@ -36,6 +32,7 @@ import android.widget.Toast;
 import com.handstandtech.harvest.model.TimerResponse;
 import com.handstandtech.timetap.Constants;
 import com.handstandtech.timetap.R;
+import com.handstandtech.timetap.application.TimeTapApplication;
 import com.handstandtech.timetap.task.AsyncTaskCallback;
 import com.handstandtech.timetap.task.StartTimerTask;
 import com.handstandtech.timetap.task.ToggleTimerTask;
@@ -45,6 +42,7 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
   private static final int VOICE_RECOGNITION_REQUEST_CODE = 0;
   protected static final String RESUME_TIMER_TEXT = "Resume Timer";
   private static final String STOP_TIMER_TEXT = "Stop Timer";
+  private static final int HELLO_ID = 1;
 
   private Handler runningTimerDisplayHandler = new Handler();
 
@@ -58,6 +56,8 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
     setContentView(R.layout.activity_task_screen);
 
     Bundle bundle = getIntent().getExtras();
+
+    Boolean joinRunningTimer = bundle.getBoolean(Constants.PROP_JOIN_RUNNING_TIMER);
     Long projectId = bundle.getLong(Constants.PROP_PROJECT_ID);
     Long taskId = bundle.getLong(Constants.PROP_TASK_ID);
 
@@ -70,45 +70,58 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
     getTaskNameText().setText("");
     getHoursText().setText("");
 
-    final ProgressDialog dialog = new ProgressDialog(this);
-    dialog.setMessage("Starting Timer");
-    dialog.setIndeterminate(true);
-    dialog.setCancelable(true);
-    dialog.show();
-
     final Date now = new Date();
+    final TimeTapApplication timeTapApp = TaskScreenActivity.this.getTimeTap();
 
-    // TODO do not start timer again if started
-    Log.i(TAG, "Adding new time entry!");
-    StartTimerTask timerTask = new StartTimerTask(TaskScreenActivity.this, "", "", projectId, taskId,
-        new AsyncTaskCallback<TimerResponse>() {
+    if (joinRunningTimer) {
+      TimerResponse timerResponse = timeTapApp.getCurrTimer();
+      updateTextAndStartTimer(timerResponse, timeTapApp.getLocalStartTime());
+    } else {
+      // Stop Notification
+      removeNotification();
+      final ProgressDialog dialog = new ProgressDialog(this);
+      dialog.setMessage("Starting Timer");
+      dialog.setIndeterminate(true);
+      dialog.setCancelable(true);
+      dialog.show();
 
-          public void onTaskComplete(final TimerResponse timerResponse) {
-            if (dialog.isShowing()) {
-              dialog.dismiss();
+      // TODO do not start timer again if started
+      Log.i(TAG, "Adding new time entry!");
+      StartTimerTask timerTask = new StartTimerTask(TaskScreenActivity.this, "", "", projectId, taskId,
+          new AsyncTaskCallback<TimerResponse>() {
+
+            public void onTaskComplete(final TimerResponse timerResponse) {
+              if (dialog.isShowing()) {
+                dialog.dismiss();
+              }
+
+              // Handle a NULL Result
+              if (timerResponse == null) {
+                Toast.makeText(TaskScreenActivity.this, "ERROR: You do not have access to this project/task!",
+                    Toast.LENGTH_LONG).show();
+                Intent loginIntent = new Intent(TaskScreenActivity.this, ClientListActivity.class);
+                startActivity(loginIntent);
+              } else {
+                TaskScreenActivity.this.getTimeTap().setCurrTimer(timerResponse);
+                updateTextAndStartTimer(timerResponse, now.getTime());
+              }
             }
 
-            // Handle a NULL Result
-            if (timerResponse == null) {
-              Toast.makeText(TaskScreenActivity.this, "ERROR: You do not have access to this project/task!",
-                  Toast.LENGTH_LONG).show();
-              Intent loginIntent = new Intent(TaskScreenActivity.this, ClientListActivity.class);
-              startActivity(loginIntent);
-            } else {
-              TaskScreenActivity.this.getTimeTap().setCurrTimer(timerResponse);
+          });
+      timerTask.execute(null);
+    }
 
-              Toast.makeText(TaskScreenActivity.this, "Timer Started!", Toast.LENGTH_SHORT).show();
-              getProjectNameText().setText(timerResponse.getProject());
-              getTaskNameText().setText(timerResponse.getTask());
+  }
 
-              TaskScreenActivity.this.getTimeTap().setLocalStartTime(now.getTime());
-              runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
-              runningTimerDisplayHandler.post(mUpdateTimeTask);
-            }
-          }
-        });
-    timerTask.execute(null);
+  protected void updateTextAndStartTimer(TimerResponse timerResponse, Long now) {
+    getProjectNameText().setText(timerResponse.getProject());
+    getTaskNameText().setText(timerResponse.getTask());
+    getNotesEditText().setText(timerResponse.getNotes());
+    getSaveButtonWrapper().setVisibility(View.GONE);
 
+    TaskScreenActivity.this.getTimeTap().setLocalStartTime(now);
+    runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
+    runningTimerDisplayHandler.post(mUpdateTimeTask);
   }
 
   private void addTextFocusHandler() {
@@ -165,43 +178,6 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
       return super.onOptionsItemSelected(item);
     }
   }
-
-  // // TODO: run on new thread.
-  // private void writeNfcTag(NdefMessage ndefMessage) throws Exception {
-  // Tag nfcTag = new
-  // Tag();TaskScreenActivity.this.getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
-  // Log.d(TAG, "have nfc tag " + nfcTag);
-  // Log.d(TAG, "tech list:");
-  // for (String techStr : nfcTag.getTechList()) {
-  // if ("android.nfc.tech.Ndef".equals(techStr)) {
-  // Ndef tech = Ndef.get(nfcTag);
-  // tech.connect();
-  // tech.writeNdefMessage(ndefMessage);
-  // tech.close();
-  // return;
-  // }
-  // }
-  //
-  // NdefFormatable ndefFormatable = NdefFormatable.get(nfcTag);
-  // ndefFormatable.connect();
-  // ndefFormatable.format(ndefMessage);
-  // ndefFormatable.close();
-  // }
-  //
-  // private NdefMessage ndefForUri(String uri) {
-  // byte[] payload = uri.toString().getBytes();
-  // byte[] id;
-  // if (payload.length > 255) {
-  // id = Arrays.copyOfRange(payload, 0, 255);
-  // } else {
-  // id = payload;
-  // }
-  // NdefRecord[] records = new NdefRecord[1];
-  // records[0] = new NdefRecord(NdefRecord.TNF_ABSOLUTE_URI,
-  // NdefRecord.RTD_URI, id, payload);
-  // NdefMessage message = new NdefMessage(records);
-  // return message;
-  // }
 
   private void addSaveClickHandler() {
     final TimeTapBaseActivity context = TaskScreenActivity.this;
@@ -267,10 +243,12 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
       if (elapsedHoursDecimal != null) {
         String decimalString = df.format(elapsedHoursDecimal);
         if (decimalString.equals("0")) {
-          getHoursText().setText("0.00");
-        } else {
-          getHoursText().setText(decimalString);
+          decimalString = "0.00";
         }
+        getHoursText().setText(decimalString);
+
+        startNotificationBarItem(TaskScreenActivity.this.getTimeTap().getCurrTimer(), decimalString);
+
         runningTimerDisplayHandler.postDelayed(this, TimeConstants.ONE_SECOND);
       } else {
         runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
@@ -278,6 +256,24 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
       }
     }
   };
+
+  private void startNotificationBarItem(TimerResponse timerResponse, String decimalString) {
+    Context context = TaskScreenActivity.this.getApplicationContext();
+
+    Intent notificationIntent = new Intent(TaskScreenActivity.this, TaskScreenActivity.class);
+    Bundle bundle = new Bundle();
+    bundle.putBoolean(Constants.PROP_JOIN_RUNNING_TIMER, true);
+    notificationIntent.putExtras(bundle);
+    PendingIntent contentIntent = PendingIntent.getActivity(TaskScreenActivity.this, 0, notificationIntent, 0);
+
+    String contentTitle = "Timer Running " + decimalString + " Hours";
+    String contentText = timerResponse.getProject() + " - " + timerResponse.getTask();
+    Notification notification = new Notification(R.drawable.icon, "Timer Running", System.currentTimeMillis());
+    notification.flags = Notification.FLAG_ONGOING_EVENT;
+    notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+    NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    mNotificationManager.notify(HELLO_ID, notification);
+  }
 
   // /**
   // * Print time to 00:00:00 format
@@ -366,6 +362,9 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
                 dialog.dismiss();
               }
 
+              // Stop Notification
+              removeNotification();
+
               // Stop the Timer Display
               runningTimerDisplayHandler.removeCallbacks(mUpdateTimeTask);
 
@@ -378,10 +377,16 @@ public class TaskScreenActivity extends TimeTapBaseActivity {
               context.getTimeTap().setCurrTimer(result);
               context.getTimeTap().setLocalStartTime(null);
             }
+
           });
       toggleTimerTask.execute(null);
     }
   };
+
+  private void removeNotification() {
+    NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    mNotificationManager.cancel(HELLO_ID);
+  }
 
   private OnClickListener resumeTimerListener = new OnClickListener() {
     public void onClick(View v) {

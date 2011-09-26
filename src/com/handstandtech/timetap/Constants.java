@@ -41,6 +41,8 @@ public class Constants {
 
   public static final String PROP_URI = "uri";
 
+  public static final String PROP_JOIN_RUNNING_TIMER = "join_running_timer";
+
   public static String PROP_CLIENT_NAME = "client_name";
 
 }
