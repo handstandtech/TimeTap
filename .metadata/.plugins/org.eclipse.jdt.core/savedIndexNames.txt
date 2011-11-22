@@ -1,4 +1,0 @@
-INDEX VERSION 1.126+/Users/handstandtech/dev/eclipseworkspaces/TimeTap/.metadata/.plugins/org.eclipse.jdt.core
-797747183.index
-1159889356.index
-887748979.index
