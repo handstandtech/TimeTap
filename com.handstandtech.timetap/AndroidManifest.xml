@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.handstandtech.timetap" android:versionName="v2011-09-29"
-	android:versionCode="2">
+	package="com.handstandtech.timetap" android:versionName="2011.12.01"
+	android:versionCode="3">
 	<uses-sdk android:minSdkVersion="6" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.NFC" />
