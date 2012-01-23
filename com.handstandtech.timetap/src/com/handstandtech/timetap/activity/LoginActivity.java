@@ -129,17 +129,17 @@ public class LoginActivity extends TimeTapBaseActivity {
 
   private String getUsername() {
     EditText usernameText = (EditText) findViewById(R.id.usernameText);
-    return usernameText.getText().toString();
+    return usernameText.getText().toString().trim();
   }
 
   private String getSubdomain() {
     EditText text = (EditText) findViewById(R.id.subdomainText);
-    return text.getText().toString();
+    return text.getText().toString().trim();
   }
 
   private String getPassword() {
     EditText usernameText = (EditText) findViewById(R.id.passwordText);
-    return usernameText.getText().toString();
+    return usernameText.getText().toString().trim();
   }
 
   @Override
